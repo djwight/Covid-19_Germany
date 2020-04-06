@@ -1,0 +1,7 @@
+{
+"base_dir": "/home/darren/Documents/DS/projects/Covid-19_Germany",
+"data_dir": "/home/darren/Documents/DS/projects/Covid-19_Germany/data",
+"url": "https://www.rki.de/DE/Content/InfAZ/N/Neuartiges_Coronavirus/Fallzahlen.html",
+"csv_file": "DE_new_cases.csv",
+"s3_bucket_file_path": ""
+}
