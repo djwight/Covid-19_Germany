@@ -59,8 +59,10 @@ def job():
 
 
 if __name__ == '__main__':
-    schedule.every().day.at("17:00").do(job)
+    #schedule.every().day.at("17:00").do(job)
+    schedule.every(0.5).minutes.do(job)
+
 
     while True:
         schedule.run_pending()
-        time.sleep(79200) #sleep for 22h
+        time.sleep(60) #sleep for 22h
