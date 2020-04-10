@@ -8,15 +8,16 @@ from datetime import datetime
 import pandas as pd
 from urllib import request
 import boto3
+import s3fs
 
 
 def handler(event, context):
-    url, csv_file, s3_bucket_file_path = load_paths('paths.json')
+    url, csv_file, bucket = load_url_s3_bucket('paths.json')
     page = load_url(url)
     new_cases = load_and_clean_new_cases(page)
-    df = read_csv_from_s3_bucket(s3_bucket_file_path)
+    df = read_csv_from_s3_bucket(bucket, csv_file)
     df_new = append_new_cases_to_s3_csv(df, new_cases)
-    return_csv_to_s3_bucket(df_new, s3_bucket_file_path)
+    return_csv_to_s3_bucket(df_new, bucket, csv_file)
 
 
 def load_url_s3_bucket(json_path_file):
@@ -27,8 +28,7 @@ def load_url_s3_bucket(json_path_file):
     url = data['url']
     csv_file = data['csv_file']
     bucket = data['s3_bucket']
-    file = data['filename']
-    return url, csv_file, s3_bucket_file_path
+    return url, csv_file, bucket
 
 
 def load_url(url):
@@ -56,11 +56,13 @@ def load_and_clean_new_cases(page):
     return new_cases
 
 
-def read_csv_from_s3_bucket(s3_bucket_file_path):
+def read_csv_from_s3_bucket(bucket, csv_file):
     """Fetches the csv file from s3 bucket for appending the new cases. Returns
     csv as a df."""
-    s3 = boto3.client('s3')
-    df = pd.read_csv(s3_bucket_file_path)
+    s3 = boto3.resource('s3')
+    obj = s3.Object(bucket, csv_file)
+    body = obj.get()['body'].read()
+    df = pd.read_csv(body)
     return df
 
 
@@ -70,7 +72,9 @@ def append_new_cases_to_s3_csv(df, new_cases):
     return df_new
 
 
-def return_csv_to_s3_bucket(df_new, s3_bucket_file_path):
+def return_csv_to_s3_bucket(df_new, bucket, csv_file):
     """Re-saves the csv file to s3 bucket. Returns nothing."""
-    df.to_csv(s3_bucket_file_path, index=False)
+    s3 = s3fs.S3FileSystem(anon=False)
+    with open(bucket/csv_file, 'w') as f:
+        df_new.to_csv(f)
     return
